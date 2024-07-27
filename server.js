@@ -46,13 +46,6 @@ app.get('/pacientes', (req, res) => {
     res.render('pacientes', { Nome, preco });
 });
 
-// Submissão de form da página laboratorios_pesquisa
-
-app.post('/submit-exam', (req, res) => {
-    const { Nome, preco } = req.body;
-    res.redirect(`/pacientes?Nome=${encodeURIComponent(Nome)}&preco=${encodeURIComponent(preco)}`);
-});
-
 // renderizar servidor 
 app.listen(PORT, () => {
     console.log(`Servidor disponível em http://localhost:${PORT}`);
