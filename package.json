@@ -1,0 +1,29 @@
+{
+    "name": "blockmed",
+    "version": "1.0.0",
+    "description": "![Alt text](./img/logo.png)",
+    "main": "index.js",
+    "directories": {
+      "doc": "docs"
+    },
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/an4Clar4/BlockMed.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+      "url": "https://github.com/an4Clar4/BlockMed/issues"
+    },
+    "homepage": "https://github.com/an4Clar4/BlockMed#readme",
+    "dependencies": {
+      "body-parser": "^1.20.2",
+      "ejs": "^3.1.10",
+      "express": "^4.19.2"
+    }
+  }
+  
