@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <title>Patients</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script>
+        async function connectMetaMask() {
+            if (window.ethereum) {
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const web3 = new Web3(window.ethereum);
+                    const accounts = await web3.eth.getAccounts();
+                    document.getElementById('walletAddress').innerText = accounts[0];
+                } catch (error) {
+                    console.error("User denied account access");
+                }
+            } else {
+                console.error("MetaMask not detected");
+            }
+        }
+
+        async function handleSubmit(response) {
+            if (window.ethereum) {
+                const web3 = new Web3(window.ethereum);
+                const accounts = await web3.eth.getAccounts();
+                // Add your smart contract interaction code here
+                console.log("Response:", response);
+                console.log("Wallet Address:", accounts[0]);
+            } else {
+                console.error("MetaMask not detected");
+            }
+        }
+    </script>
+</head>
+<body onload="connectMetaMask()">
+    <div class="container mt-5">
+        <h1 class="text-center">Patients</h1>
+        <h2 class="text-center">Exam Proposals</h2>
+        <div class="alert alert-info" role="alert">
+            You have received a proposal from Lab XYZ to sell your exam for $100.
+        </div>
+        <p class="text-muted">Wallet Address: <span id="walletAddress"></span></p>
+        <div class="text-center">
+            <button type="submit" class="btn btn-success mr-2" onclick="handleSubmit('accept')">Accept</button>
+            <button type="submit" class="btn btn-danger" onclick="handleSubmit('refuse')">Refuse</button>
+        </div>
+    </div>
+</body>
+</html>

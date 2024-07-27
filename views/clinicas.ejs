@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinics</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+</head>
+<body>
+    <header class="jumbotron text-center">
+        <h1>Clinics</h1>
+    </header>
+    <main class="container">
+        <section class="row">
+            <div class="col-md-6">
+                <h2>Patients List</h2>
+                <ul class="list-group">
+                    <li class="list-group-item">Patient 1 - Wallet ID: 0x123...abc</li>
+                    <li class="list-group-item">Patient 2 - Wallet ID: 0x456...def</li>
+                    <li class="list-group-item">Patient 3 - Wallet ID: 0x789...ghi</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h2>Select Patients</h2>
+                <form action="/select-patients" method="POST">
+                    <div class="form-group">
+                        <label for="selected_patients">Select Patients:</label>
+                        <select id="selected_patients" name="selected_patients" multiple required class="form-control">
+                            <option value="patient1">Patient 1</option>
+                            <option value="patient2">Patient 2</option>
+                            <option value="patient3">Patient 3</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send Email</button>
+                </form>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

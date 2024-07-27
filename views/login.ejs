@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        .card {
+          border-radius: 10px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .nav-link {
+          font-size: 14px;
+          color: #337ab7;
+          text-decoration: none;
+        }
+        .nav-link:hover {
+          text-decoration: underline;
+        }
+      </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-dark navbar-dark py-3 fixed-top">
+        <div class="container">
+            <a href="#" class="navbar-brand">
+                BLOCKMED
+            </a>
+            <button
+            class="navbar-toggler"
+            type="button"
+            data-toggle="collapse"
+            data-target="#navmenu"
+            >
+            <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navmenu">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                <a href="https://github.com/an4Clar4/BlockMed" class="nav-link">Github</a>
+                </li>
+            </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5 pt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h1 class="card-title text-center">Login</h1>
+                        <form action="/login" method="POST">
+                            <div class="form-group">
+                                <label for="user_type" class="text-center">Select User Type:</label>
+                                <select id="user_type" name="user_type" required class="form-control">
+                                    <option value="research_institution">Research Institution</option>
+                                    <option value="clinic">Clinic</option>
+                                    <option value="patient">Patient</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Login</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
