@@ -14,3 +14,9 @@ O vídeo abaixo demonstra o funcionamento da plataforma.
 
 ## Business Model Canvas 
 Para visualizar nosso Business Model Canvas (BMC), acesse o [link](BMC/BMC.png) 
+
+
+## Passo a passo para rodar o projeto 
+```npm install node  ```
+
+``` npm install express web3 ejs body-parser ```
