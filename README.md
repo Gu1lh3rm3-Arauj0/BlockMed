@@ -20,3 +20,9 @@ Para visualizar nosso Business Model Canvas (BMC), acesse o [link](BMC/BMC.png)
 ```npm install node  ```
 
 ``` npm install express web3 ejs body-parser ```
+
+``` npm install dotenv ``` 
+
+``` npm install nodemailer ``` -- Criar uma senha para apps na configuração do email do google
+
+``` npm install ganache-cli web3 ``` 
