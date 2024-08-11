@@ -3,38 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clinics</title>
+    <title>Clinicas</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        .list-container {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
     <header class="jumbotron text-center">
-        <h1>Clinics</h1>
+        <h1>Clinicas</h1>
     </header>
     <main class="container">
         <section class="row">
             <div class="col-md-6">
-                <h2>Patients List</h2>
-                <ul class="list-group">
-                    <li class="list-group-item">Patient 1 - Wallet ID: 0x123...abc</li>
-                    <li class="list-group-item">Patient 2 - Wallet ID: 0x456...def</li>
-                    <li class="list-group-item">Patient 3 - Wallet ID: 0x789...ghi</li>
-                </ul>
+                <h2>Lista de Pacientes</h2>
+                <div class="list-container">
+                    <ul class="list-group">
+                        <% patients.forEach(patient => { %>
+                            <li class="list-group-item">
+                                <%= patient.name %> - Wallet ID: <%= patient.wallet %> - Email: <%= patient.email %>
+                                <button class="btn btn-warning btn-sm float-right ml-2" data-toggle="modal" data-target="#editPatientModal" data-id="<%= patient.wallet %>" data-name="<%= patient.name %>" data-email="<%= patient.email %>">Editar</button>
+                                <form action="/delete-patient" method="POST" class="d-inline float-right">
+                                    <input type="hidden" name="wallet" value="<%= patient.wallet %>">
+                                    <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+                                </form>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </div>
             </div>
             <div class="col-md-6">
-                <h2>Select Patients</h2>
-                <form action="/select-patients" method="POST">
-                    <div class="form-group">
-                        <label for="selected_patients">Select Patients:</label>
-                        <select id="selected_patients" name="selected_patients" multiple required class="form-control">
-                            <option value="patient1">Patient 1</option>
-                            <option value="patient2">Patient 2</option>
-                            <option value="patient3">Patient 3</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Send Email</button>
+                <h2>Lista de Aceitos</h2>
+                <div class="list-container">
+                    <ul class="list-group" id="acceptedList">
+                        <% acceptedPatients.forEach(patient => { %>
+                            <li class="list-group-item"><%= patient.name %> - Wallet ID: <%= patient.wallet %> - Email: <%= patient.email %></li>
+                        <% }); %>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        <section class="row mt-3">
+            <div class="col-md-4">
+                <button class="btn btn-primary" data-toggle="modal" data-target="#newPatientModal">Novo Paciente</button>
+            </div>
+            <div class="col-md-4">
+                <form action="/send-email" method="POST" id="sendEmailForm">
+                    <button type="submit" class="btn btn-primary">Enviar Email</button>
+                </form>
+            </div>
+            <div class="col-md-4">
+                <form action="/send-doc" method="POST">
+                    <button type="submit" class="btn btn-primary">Enviar doc</button>
                 </form>
             </div>
         </section>
     </main>
+
+    <!-- Modal Novo Paciente -->
+    <div class="modal fade" id="newPatientModal" tabindex="-1" role="dialog" aria-labelledby="newPatientModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newPatientModalLabel">Registro de novo paciente</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="newPatientForm" action="/new-patient" method="POST">
+                        <div class="form-group">
+                            <label for="patientName">Nome Paciente</label>
+                            <input type="text" class="form-control" id="patientName" name="patientName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientWalletId">Carteira ID</label>
+                            <input type="text" class="form-control" id="patientWalletId" name="patientWalletId" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientEmail">Email</label>
+                            <input type="email" class="form-control" id="patientEmail" name="patientEmail" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Registrar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Modal -->
+
+    <!-- Modal Editar Paciente -->
+    <div class="modal fade" id="editPatientModal" tabindex="-1" role="dialog" aria-labelledby="editPatientModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPatientModalLabel">Editar Paciente</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPatientForm" action="/edit-patient" method="POST">
+                        <input type="hidden" id="editWalletId" name="walletId">
+                        <div class="form-group">
+                            <label for="editPatientName">Nome Paciente</label>
+                            <input type="text" class="form-control" id="editPatientName" name="patientName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editPatientEmail">Email</label>
+                            <input type="email" class="form-control" id="editPatientEmail" name="patientEmail" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Modal -->
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+    <script>
+        $('#editPatientModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var wallet = button.data('id');
+            var name = button.data('name');
+            var email = button.data('email');
+
+            var modal = $(this);
+            modal.find('.modal-body #editWalletId').val(wallet);
+            modal.find('.modal-body #editPatientName').val(name);
+            modal.find('.modal-body #editPatientEmail').val(email);
+        });
+    </script>
 </body>
 </html>

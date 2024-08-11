@@ -26,7 +26,7 @@
             if (window.ethereum) {
                 const web3 = new Web3(window.ethereum);
                 const accounts = await web3.eth.getAccounts();
-                // Add your smart contract interaction code here
+                // Adicione o código de interação com o contrato inteligente aqui
                 console.log("Response:", response);
                 console.log("Wallet Address:", accounts[0]);
             } else {
@@ -40,7 +40,7 @@
         <h1 class="text-center">Patients</h1>
         <h2 class="text-center">Exam Proposals</h2>
         <div class="alert alert-info" role="alert">
-            You have received a proposal from Lab XYZ to sell your exam for $100.
+            You have received a proposal from <%= proposal.labName %> to sell your exam for $<%= proposal.price %>.
         </div>
         <p class="text-muted">Wallet Address: <span id="walletAddress"></span></p>
         <div class="text-center">
