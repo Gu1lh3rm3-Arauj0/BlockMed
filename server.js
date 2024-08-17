@@ -1,5 +1,4 @@
-const { ethers } = require('ethers');
-const { Wallet } = require('ethers');
+const { ethers, Wallet } = require('ethers');
 const { abi, contractAddress } = require('./public/constants.js'); 
 
 const express = require('express');
@@ -7,6 +6,16 @@ const bodyParser = require('body-parser');
 const path = require('path');
 require('dotenv').config();  // Carrega as variáveis de ambiente
 const nodemailer = require('nodemailer');
+
+const { Web3 } = require('web3');
+
+const web3 = new Web3('https://sepolia.infura.io/v3/6dfb809f2066438f89e674280024049e');
+
+const contract = new web3.eth.Contract(abi, contractAddress);
+
+const labAddress = process.env.LAB_ADDRESS;
+
+const privateKey = process.env.PRIVATE_KEY;
 
 const app = express();
 const PORT = 3000;
@@ -149,7 +158,7 @@ app.post('/delete-patient', (req, res) => {
 });
 
 app.post('/submit-exam', async (req, res) => {
-    const { nome_lab, quantidade, preco, reason, walletAddress } = req.body;
+    const { nome_lab, quantidade, preco, reason } = req.body;
     const proposalId = proposals.length + 1;
     proposals.push({
         id: proposalId,
@@ -161,60 +170,64 @@ app.post('/submit-exam', async (req, res) => {
     });
 
     try {
-        // const balance = await provider.getBalance("0x5953DF4a70c9f4FC64C9016777Cb63d0e43dF98A");
+
+        const tx = contract.methods.sendProposal(quantidade, preco, reason);
         
-        // console.log(`Saldo da conta: ${ethers.utils.formatEther(balance)} ETH`);
+        const gas = await tx.estimateGas({ from: labAddress });
+        const gasPrice = await web3.eth.getGasPrice();
+        const data = tx.encodeABI();
+        const nonce = await web3.eth.getTransactionCount(labAddress);
 
-        const provider = new ethers.providers.JsonRpcProvider(process.env.INFURA_URL);
-
-
-        const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-
-        const contract = new ethers.Contract(contractAddress, abi, wallet.connect(provider));
-
-        // Converter o preço para wei (a menor unidade de ETH)
-        const precoEmWei = ethers.utils.parseUnits(preco.toString(), 'ether');
-
-        // Chamar a função do contrato inteligente
-        const tx = await contract.sendProposal(
-            ethers.BigNumber.from(quantidade),  // Quantidade de exames
-            precoEmWei,  // Preço por exame em wei
-            reason  // Tipo de exame
+        const signedTx = await web3.eth.accounts.signTransaction(
+            {
+                to: contractAddress,
+                data,
+                gas,
+                gasPrice,
+                nonce,
+                chainId: 11155111 // ID da rede Sepolia
+            },
+            privateKey
         );
 
-        // Aguardar a confirmação da transação
-        await tx.wait();
-        console.log('Proposta de exame enviada com sucesso:', tx.hash);
-        // Enviar uma resposta ao frontend indicando que a transação foi bem-sucedida
-        res.json({ success: true, message: 'Proposta enviada com sucesso', txHash: tx.hash });
+        const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        console.log('Transação bem-sucedida', receipt);
     } catch (error) {
-        console.error('Erro ao enviar a proposta de exame:', error);
-        // Enviar uma resposta ao frontend indicando que houve um erro
-        res.json({ success: false, message: 'Erro ao enviar a proposta' });
-}
+        console.error('Erro ao interagir com o contrato:', error);
+    }
 });
 
 
 // encerrar proposta
-app.post('/close-proposal', (req, res) => {
+app.post('/close-proposal', async (req, res) => {
     const { response_proposal } = req.body;
-    // enviar essa resposta pro contrato
+    if (response_proposal == 1) {
+        const tx = contract.methods.closeProposal();
+
+        try {
+            const gas = await tx.estimateGas({ from: labAddress });
+            const gasPrice = await web3.eth.getGasPrice();
+            const data = tx.encodeABI();
+            const nonce = await web3.eth.getTransactionCount(labAddress);
+
+            const signedTx = await web3.eth.accounts.signTransaction(
+                {
+                    to: contractAddress,
+                    data,
+                    gas,
+                    gasPrice,
+                    nonce,
+                    chainId: 11155111 // ID da rede Sepolia
+                },
+                privateKey
+            );
+
+            const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+            console.log('Transação bem-sucedida', receipt);
+        } catch (error) {
+            console.error('Erro ao interagir com o contrato:', error);
+        }
+    }
     console.log(`Resposta da proposta: ${response_proposal}`);
     
-});
-
-
-app.post('/associate-patient', (req, res) => {
-    const { proposalId, patientWallet } = req.body;
-
-    // Encontra a proposta pelo IDconst proposal = proposals.find(p => p.id === parseInt(proposalId));
-
-    if (proposal) {
-        // Adiciona o paciente à lista de pacientes associados à proposta
-        proposal.patients.push(patientWallet);
-        console.log(`Paciente com carteira ${patientWallet} associado à proposta ${proposalId}`);
-        res.send(`Paciente associado com sucesso à proposta ${proposalId}`);
-    } else {
-        res.status(404).send('Proposta não encontrada');
-    }
 });
