@@ -15,7 +15,11 @@ const contract = new web3.eth.Contract(abi, contractAddress);
 
 const labAddress = process.env.LAB_ADDRESS;
 
+const clinicAddress = process.env.CLINIC_ADDRESS;
+
 const privateKey = process.env.PRIVATE_KEY;
+
+const privateKeyClinic = process.env.PRIVATE_KEY_CLINIC;
 
 const app = express();
 const PORT = 3000;
@@ -97,9 +101,36 @@ app.get('/pacientes', (req, res) => {
 });
 
 
-app.post('/new-patient', (req, res) => {
+app.post('/new-patient', async (req, res) => {
     const { patientName, patientWalletId, patientEmail } = req.body;
     patients.push({ name: patientName, wallet: patientWalletId, email: patientEmail });
+
+    try {
+
+        const tx = contract.methods.addPatient(patientWalletId); 
+        
+        const gas = await tx.estimateGas({ from: clinicAddress });
+        const gasPrice = await web3.eth.getGasPrice();
+        const data = tx.encodeABI();
+        const nonce = await web3.eth.getTransactionCount(clinicAddress);
+
+        const signedTx = await web3.eth.accounts.signTransaction(
+            {
+                to: contractAddress,
+                data,
+                gas,
+                gasPrice,
+                nonce,
+                chainId: 11155111 // ID da rede Sepolia
+            },
+            privateKeyClinic
+        );
+
+        const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        console.log('Transação bem-sucedida', receipt);
+    } catch (error) {
+        console.error('Erro ao interagir com o contrato:', error);
+    }
     res.redirect('/clinicas');
 });
 
@@ -124,9 +155,37 @@ app.post('/send-email', (req, res) => {
     res.redirect('/clinicas');
 });
 
-app.post('/send-doc', (req, res) => {
-    // Lógica para enviar documentos via drive --> temos que achar um jeito de criptografar os arquivos
-    res.redirect('/clinicas');
+app.post('/send-doc', async (req, res) => {
+    const { patientWallet, docLink } = req.body;
+
+    try {
+        const tx = contract.methods.addPatientApproval(patientWallet, docLink);
+
+        const gas = await tx.estimateGas({ from: labAddress });
+        const gasPrice = await web3.eth.getGasPrice();
+        const data = tx.encodeABI();
+        const nonce = await web3.eth.getTransactionCount(labAddress);
+
+        const signedTx = await web3.eth.accounts.signTransaction(
+            {
+                to: contractAddress,
+                data,
+                gas,
+                gasPrice,
+                nonce,
+                chainId: 11155111
+            },
+            privateKey
+        );
+
+        const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        console.log('Transação bem-sucedida', receipt);
+
+        res.redirect('/clinicas');
+    } catch (error) {
+        console.error('Erro ao interagir com o contrato:', error);
+        res.status(500).send('Erro ao enviar o documento');
+    }
 });
 
 // Endpoint para atualizar a lista de aceitos --> conectar com contrato inteligente
@@ -231,3 +290,36 @@ app.post('/close-proposal', async (req, res) => {
     console.log(`Resposta da proposta: ${response_proposal}`);
     
 });
+
+
+
+app.post('accept-proposal', async(req, res) => {
+    const { walletAddress } = req.body;
+    const tx = contract.methods.acceptProposalPatient(walletAddress);
+     
+    console.log("ENTROU CARACOULIS");
+    try {
+        const gas = await tx.estimateGas({ from: walletAddress });
+        const gasPrice = await web3.eth.getGasPrice();
+        const data = tx.encodeABI();
+        const nonce = await web3.eth.getTransactionCount(walletAddress);
+
+        const signedTx = await web3.eth.accounts.signTransaction(
+            {
+                to: contractAddress,
+                data,
+                gas,
+                gasPrice,
+                nonce,
+                chainId: 11155111 // ID da rede Sepolia
+            },
+            privateKey
+        );
+
+        const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        console.log('Transação bem-sucedida', receipt);
+    } catch (error) {
+        console.error('Erro ao interagir com o contrato:', error);
+    }
+
+})
