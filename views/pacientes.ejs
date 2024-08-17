@@ -5,37 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <title>Patients</title>
-    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
-    <script>
-        async function connectMetaMask() {
-            if (window.ethereum) {
-                try {
-                    await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    const web3 = new Web3(window.ethereum);
-                    const accounts = await web3.eth.getAccounts();
-                    document.getElementById('walletAddress').innerText = accounts[0];
-                } catch (error) {
-                    console.error("User denied account access");
-                }
-            } else {
-                console.error("MetaMask not detected");
-            }
-        }
-
-        async function handleSubmit(response) {
-            if (window.ethereum) {
-                const web3 = new Web3(window.ethereum);
-                const accounts = await web3.eth.getAccounts();
-                // Adicione o código de interação com o contrato inteligente aqui
-                console.log("Response:", response);
-                console.log("Wallet Address:", accounts[0]);
-            } else {
-                console.error("MetaMask not detected");
-            }
-        }
-    </script>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.6.0/dist/web3.min.js"></script>
+    <script src="/index.js" type="module"></script>
 </head>
-<body onload="connectMetaMask()">
+<body>
     <div class="container mt-5">
         <h1 class="text-center">Patients</h1>
         <h2 class="text-center">Exam Proposals</h2>
@@ -43,10 +18,19 @@
             You have received a proposal from <%= proposal.labName %> to sell your exam for $<%= proposal.price %>.
         </div>
         <p class="text-muted">Wallet Address: <span id="walletAddress"></span></p>
+        
+        <!-- Botões de conectar e desconectar -->
+        <div class="text-center mb-4">
+            <button id="connectButton" class="btn btn-primary mr-2">Connect MetaMask</button>
+            <button id="disconnectButton" class="btn btn-warning">Disconnect</button>
+        </div>
+
+        <!-- Botões de aceitar e recusar -->
         <div class="text-center">
             <button type="submit" class="btn btn-success mr-2" onclick="handleSubmit('accept')">Accept</button>
             <button type="submit" class="btn btn-danger" onclick="handleSubmit('refuse')">Refuse</button>
         </div>
     </div>
 </body>
+
 </html>

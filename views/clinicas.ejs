@@ -12,8 +12,9 @@
             border-radius: 5px;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.6.0/dist/web3.min.js"></script>
 </head>
-<body>
+<body >
     <header class="jumbotron text-center">
         <h1>Clinicas</h1>
     </header>
@@ -128,19 +129,7 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-
-    <script>
-        $('#editPatientModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget);
-            var wallet = button.data('id');
-            var name = button.data('name');
-            var email = button.data('email');
-
-            var modal = $(this);
-            modal.find('.modal-body #editWalletId').val(wallet);
-            modal.find('.modal-body #editPatientName').val(name);
-            modal.find('.modal-body #editPatientEmail').val(email);
-        });
-    </script>
 </body>
+<script src="/index.js" type="module"></script>
+
 </html>
