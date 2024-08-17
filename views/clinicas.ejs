@@ -58,7 +58,11 @@
                 </form>
             </div>
             <div class="col-md-4">
-                <form action="/send-doc" method="POST">
+                <form action="/send-doc" method="POST" id="sendDocForm">
+                    <div class="form-group">
+                        <label for="docLinkInput">Link do Documento</label>
+                        <input type="text" class="form-control" id="docLinkInput" name="docLinkInput" placeholder="Digite o link do documento">
+                    </div>
                     <button type="submit" class="btn btn-primary">Enviar doc</button>
                 </form>
             </div>
@@ -129,6 +133,17 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script>
+        document.getElementById('sendDocForm').addEventListener('submit', function(event) {
+            var linkInput = document.getElementById('docLinkInput');
+            var linkValue = linkInput.value;
+
+            if (!linkValue) {
+                event.preventDefault();
+                alert('Por favor, insira o link do documento.');
+            }
+        });
+    </script>
 </body>
 <script src="/index.js" type="module"></script>
 

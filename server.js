@@ -1,11 +1,14 @@
 const { ethers, Wallet } = require('ethers');
 const { abi, contractAddress } = require('./public/constants.js'); 
+const Tx = require('ethereumjs-tx').Transaction;
 
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 require('dotenv').config();  // Carrega as variáveis de ambiente
 const nodemailer = require('nodemailer');
+
+const cors = require('cors');
 
 const { Web3 } = require('web3');
 
@@ -30,6 +33,12 @@ app.get('/index.js', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.js'));
 });
 
+app.use(cors({
+    origin: 'http://localhost:3000', // Adjust as needed
+    methods: ['GET', 'POST'],
+    credentials: true
+}));
+
 
 // renderizar servidor 
 app.listen(PORT, () => {
@@ -46,7 +55,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 
 let patients = []; // Array para armazenar todos os pacientes
-const acceptedPatients = []; // Array para armazenar os pacientes aceitos
+let acceptedPatients = []; // Array para armazenar os pacientes aceitos
 
 // Email transporter
 const transporter = nodemailer.createTransport({
@@ -291,35 +300,56 @@ app.post('/close-proposal', async (req, res) => {
     
 });
 
+app.use(express.json());
 
-
-app.post('accept-proposal', async(req, res) => {
+app.post('/accept-proposal', async (req, res) => {
     const { walletAddress } = req.body;
-    const tx = contract.methods.acceptProposalPatient(walletAddress);
-     
-    console.log("ENTROU CARACOULIS");
-    try {
-        const gas = await tx.estimateGas({ from: walletAddress });
-        const gasPrice = await web3.eth.getGasPrice();
-        const data = tx.encodeABI();
-        const nonce = await web3.eth.getTransactionCount(walletAddress);
 
-        const signedTx = await web3.eth.accounts.signTransaction(
-            {
-                to: contractAddress,
-                data,
-                gas,
-                gasPrice,
-                nonce,
-                chainId: 11155111 // ID da rede Sepolia
-            },
-            privateKey
-        );
-
-        const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-        console.log('Transação bem-sucedida', receipt);
-    } catch (error) {
-        console.error('Erro ao interagir com o contrato:', error);
+    if (!walletAddress) {
+        return res.status(400).send('Wallet address is required');
     }
 
-})
+    try {
+        const gasEstimate = await contract.methods.acceptProposalPatient(walletAddress).estimateGas({ from: walletAddress });
+
+        const nonce = await web3.eth.getTransactionCount(walletAddress);
+
+        const patient = patients.find(p => p.wallet === walletAddress);
+
+        const rawTx = {
+            nonce: web3.utils.toHex(nonce),
+            from: walletAddress,
+            to: contractAddress,
+            gasPrice: web3.utils.toHex(web3.utils.toWei('10', 'gwei')), 
+            gas: web3.utils.toHex(gasEstimate),
+            value: '0x0',
+            data: contract.methods.acceptProposalPatient(walletAddress).encodeABI()
+        };
+
+        const tx = new Tx(rawTx, { chain: 'ropsten' }); 
+        tx.sign(privateKey); 
+
+        const serializedTx = '0x' + tx.serialize().toString('hex');
+        const receipt = await web3.eth.sendSignedTransaction(serializedTx);
+
+        console.log('Transaction successful', receipt);
+        res.status(200).json({
+            message: 'Proposal accepted successfully',
+            transactionHash: receipt.transactionHash
+        });
+    
+        if (patient) {
+            acceptedPatients.push(patient);
+            console.log(acceptedPatients);
+        } else {
+            console.log(`Paciente com Wallet ID ${walletAddress} não encontrado.`);
+        }
+
+    } catch (error) {
+        console.error('Error preparing or sending transaction:', error);
+        res.status(500).send('Error accepting proposal');
+    }
+});
+
+
+
