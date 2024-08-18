@@ -30,6 +30,7 @@
         "express": "^4.19.2",
         "ganache-cli": "^6.12.2",
         "nodemailer": "^6.9.14",
+        "punycode": "^2.3.1",
         "web3": "^4.11.1"
     }
 }

@@ -38,18 +38,12 @@
 <body>
     <div class="container mt-5">
         <h1 class="text-center">Instituições de Pesquisa</h1>
-
-        <p class="text-muted">Wallet Address: <span id="walletAddress"></span></p>
         
         <!-- Close Proposal Button -->
         <form action="/close-proposal" method="POST">
             <input type="hidden" name="response_proposal" value="1">
             <button type="submit" class="close-proposal-btn">Encerrar Proposta</button>
         </form>
-
-        <button id="connectButton" style="margin-top: 20px;">Connect to MetaMask</button>
-
-        <button id="disconnectButton" disabled style="margin-top: 20px;">Disconnect from MetaMask</button>
 
 
         <form action="/submit-exam" method="POST">
@@ -72,7 +66,7 @@
         
             <div class="form-group">
         
-                <label for="preco">Preço por teste (em wey):</label>
+                <label for="preco">Preço por teste (em wei):</label>
         
                 <input type="number" id="preco" name="preco" class="form-control" required>
         
@@ -89,18 +83,6 @@
             <input type="hidden" id="walletAddressInput" name="walletAddress" value="<%= walletAddress %>">
         
             <button type="submit" class="btn btn-primary btn-block">Enviar</button>
-        
-        </form>
-
-        <div class="accepted-list-container">
-            <h2>Pacientes que aceitaram a proposta</h2>
-            <ul class="list-group">
-                <% acceptedPatients.forEach(patient => { %>
-                    <li class="list-group-item"><%= patient.name %> - Wallet ID: <%= patient.wallet %> - Phone: <%= patient.phone %></li>
-                <% }); %>
-            </ul>
-            <p> Link do doc no drive aqui</p>
-        </div>
     </div>
 </body>
 </html>

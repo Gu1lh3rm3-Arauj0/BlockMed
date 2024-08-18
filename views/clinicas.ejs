@@ -14,58 +14,53 @@
     </style>
     <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.6.0/dist/web3.min.js"></script>
 </head>
-<body >
+<body>
     <header class="jumbotron text-center">
         <h1>Clinicas</h1>
     </header>
-    <main class="container">
+    <main class="container mt-5">
         <section class="row">
-            <div class="col-md-6">
+            <div class="col-lg-6">
                 <h2>Lista de Pacientes</h2>
                 <div class="list-container">
                     <ul class="list-group">
                         <% patients.forEach(patient => { %>
-                            <li class="list-group-item">
-                                <%= patient.name %> - Wallet ID: <%= patient.wallet %> - Email: <%= patient.email %>
-                                <button class="btn btn-warning btn-sm float-right ml-2" data-toggle="modal" data-target="#editPatientModal" data-id="<%= patient.wallet %>" data-name="<%= patient.name %>" data-email="<%= patient.email %>">Editar</button>
-                                <form action="/delete-patient" method="POST" class="d-inline float-right">
-                                    <input type="hidden" name="wallet" value="<%= patient.wallet %>">
-                                    <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
-                                </form>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong><%= patient.name %></strong><br>
+                                    Wallet ID: <%= patient.wallet %> | Email: <%= patient.email %>
+                                </div>
+                                <div>
+                                    <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#editPatientModal" data-id="<%= patient.wallet %>" data-name="<%= patient.name %>" data-email="<%= patient.email %>">Editar</button>
+                                    <form action="/delete-patient" method="POST" class="d-inline">
+                                        <input type="hidden" name="wallet" value="<%= patient.wallet %>">
+                                        <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+                                    </form>
+                                </div>
                             </li>
                         <% }); %>
                     </ul>
                 </div>
             </div>
-            <div class="col-md-6">
-                <h2>Lista de Aceitos</h2>
-                <div class="list-container">
-                    <ul class="list-group" id="acceptedList">
-                        <% acceptedPatients.forEach(patient => { %>
-                            <li class="list-group-item"><%= patient.name %> - Wallet ID: <%= patient.wallet %> - Email: <%= patient.email %></li>
-                        <% }); %>
-                    </ul>
-                </div>
-            </div>
         </section>
-        <section class="row mt-3">
-            <div class="col-md-4">
-                <button class="btn btn-primary" data-toggle="modal" data-target="#newPatientModal">Novo Paciente</button>
+        <section class="row mt-5">
+            <div class="col-lg-4">
+                <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#newPatientModal">Novo Paciente</button>
             </div>
-            <div class="col-md-4">
+            <div class="col-lg-4">
                 <form action="/send-email" method="POST" id="sendEmailForm">
-                    <button type="submit" class="btn btn-primary">Enviar Email</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Enviar Email</button>
                 </form>
             </div>
-            <div class="col-md-4">
-                <form action="/send-doc" method="POST" id="sendDocForm">
+            <div class="col-lg-4">
+                <form action="/make-payments" method="POST">
                     <div class="form-group">
                         <label for="docLinkInput">Link do Documento</label>
-                        <input type="text" class="form-control" id="docLinkInput" name="docLinkInput" placeholder="Digite o link do documento">
+                        <input type="text" class="form-control" id="docLinkInput" name="docLinkInput" placeholder="Digite o link do documento" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Enviar doc</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Enviar doc e receber pagamento</button>
                 </form>
-            </div>
+            </div>            
         </section>
     </main>
 
@@ -119,6 +114,10 @@
                             <input type="text" class="form-control" id="editPatientName" name="patientName" required>
                         </div>
                         <div class="form-group">
+                            <label for="editWalletId">Wallet ID</label>
+                            <input type="text" class="form-control" id="editWalletId" name="walletId" required>
+                        </div>                        
+                        <div class="form-group">
                             <label for="editPatientEmail">Email</label>
                             <input type="email" class="form-control" id="editPatientEmail" name="patientEmail" required>
                         </div>
@@ -143,8 +142,20 @@
                 alert('Por favor, insira o link do documento.');
             }
         });
-    </script>
-</body>
-<script src="/index.js" type="module"></script>
 
+        $('#editPatientModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Botão que acionou o modal
+            var wallet = button.data('id'); 
+            var name = button.data('name');
+            var email = button.data('email');
+            
+            // Atualiza os campos do formulário no modal
+            var modal = $(this);
+            modal.find('#editWalletId').val(wallet);
+            modal.find('#editPatientName').val(name);
+            modal.find('#editPatientEmail').val(email);
+        });
+    </script>
+    <script src="/index.js" type="module"></script>
+</body>
 </html>
