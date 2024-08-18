@@ -1,4 +1,4 @@
-const contractAddress = "0xc725a435d6eb6b292ed4ee3e84a687822239786a"
+const contractAddress = "0xff3e77fde1e1bb8d205a6dc27cf693b9b19eb641"
 const abi = [
 	{
 		"anonymous": false,
@@ -316,6 +316,19 @@ const abi = [
 				"internalType": "address",
 				"name": "",
 				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "paid",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",

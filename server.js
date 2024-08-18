@@ -98,6 +98,7 @@ app.get('/clinicas', (req, res) => {
     res.render('clinicas', { patients, acceptedPatients: acceptedPatientsList  });
 });
 
+
 app.get('/pacientes', (req, res) => {
     const wallet = req.query.wallet || '';
 
@@ -186,19 +187,12 @@ app.post('/edit-patient', (req, res) => {
     res.redirect('/clinicas');
 });
 
-app.post('/delete-patient', (req, res) => {
-    const { wallet } = req.body;
-    patients = patients.filter(p => p.wallet !== wallet);
-    res.redirect('/clinicas');
-});
-
 app.post('/submit-exam', async (req, res) => {
     const { nome_lab, quantidade, preco, reason } = req.body;
-    const precoFloat = parseFloat(preco);
     const quantidadeInt = parseInt(quantidade, 10);
-    const valueInEther = precoFloat * quantidadeInt;
 
-    // Converter o valor para wei
+    // Converta o valor total para Wei
+    const valueInEther = preco * quantidadeInt;
     const valueInWei = web3.utils.toWei(valueInEther.toString(), 'ether');
 
     const proposalId = proposals.length + 1;
@@ -212,14 +206,21 @@ app.post('/submit-exam', async (req, res) => {
         patients: []  // Inicialmente, sem pacientes associados
     });
 
+    console.log('Proposta adicionada à lista de propostas:', proposals);
+
     try {
         // Enviar a transação para depositar fundos
+        console.log('Enviando transação para depósito de fundos...');
         const depositTx = contract.methods.depositFunds();
 
         const gasDeposit = await depositTx.estimateGas({ from: labAddress, value: valueInWei });
         const gasPriceDeposit = await web3.eth.getGasPrice();
         const dataDeposit = depositTx.encodeABI();
         const nonceDeposit = await web3.eth.getTransactionCount(labAddress);
+
+        console.log(`Gas necessário para depósito: ${gasDeposit}`);
+        console.log(`Preço do gas para depósito: ${gasPriceDeposit}`);
+        console.log(`Nonce para depósito: ${nonceDeposit}`);
 
         const signedTxDeposit = await web3.eth.accounts.signTransaction(
             {
@@ -238,12 +239,17 @@ app.post('/submit-exam', async (req, res) => {
         console.log('Depósito realizado com sucesso', receiptDeposit);
 
         // Enviar a proposta
-        const proposalTx = contract.methods.sendProposal(quantidadeInt, precoFloat, reason);
+        console.log('Enviando proposta...');
+        const proposalTx = contract.methods.sendProposal(quantidadeInt, preco, reason);
 
         const gasProposal = await proposalTx.estimateGas({ from: labAddress });
         const gasPriceProposal = await web3.eth.getGasPrice();
         const dataProposal = proposalTx.encodeABI();
         const nonceProposal = await web3.eth.getTransactionCount(labAddress);
+
+        console.log(`Gas necessário para proposta: ${gasProposal}`);
+        console.log(`Preço do gas para proposta: ${gasPriceProposal}`);
+        console.log(`Nonce para proposta: ${nonceProposal}`);
 
         const signedTxProposal = await web3.eth.accounts.signTransaction(
             {
@@ -261,11 +267,12 @@ app.post('/submit-exam', async (req, res) => {
         console.log('Proposta enviada com sucesso', receiptProposal);
 
         // Enviar email para o laboratório
+        console.log('Enviando email para o laboratório...');
         const mailOptions = {
             from: emailSender,
             to: 'laboratorioblockchain70@gmail.com',
             subject: `${nome_lab}. Sua proposta foi enviada!`,
-            text: `Proposta: ${quantidade} exames de ${reason} por ${preco} wei.`
+            text: `Proposta: ${quantidade} exames de ${reason} por ${preco} ether.`
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -277,7 +284,8 @@ app.post('/submit-exam', async (req, res) => {
             }
         });
 
-        // res.status(200).json({ success: true, message: 'Proposta enviada com sucesso!' });
+        res.status(200).json({ success: true, message: 'Proposta enviada com sucesso!' });
+
     } catch (error) {
         console.error('Erro ao interagir com o contrato:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -289,18 +297,15 @@ app.post('/close-proposal', async (req, res) => {
     const { response_proposal } = req.body;
 
     if (response_proposal == 1) {
-        const tx = contract.methods.closeProposal();
-
-        // const tx = contract.methods.finalizeTransaction();
+        // const tx = contract.methods.closeProposal();
+        const tx = contract.methods.finalizeTransaction();
 
         try {
-            // Estimar o gás necessário para a transação
             const gas = await tx.estimateGas({ from: labAddress });
             const gasPrice = await web3.eth.getGasPrice();
             const data = tx.encodeABI();
             const nonce = await web3.eth.getTransactionCount(labAddress);
 
-            // Assinar a transação
             const signedTx = await web3.eth.accounts.signTransaction(
                 {
                     to: contractAddress,
@@ -313,17 +318,13 @@ app.post('/close-proposal', async (req, res) => {
                 privateKey
             );
 
-            // Enviar a transação assinada
             const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
             console.log('Transação bem-sucedida', receipt);
 
-            // Convertendo valores BigInt para string, se necessário
-            const receiptWithStrings = {
-                ...receipt,
-                gasUsed: receipt.gasUsed.toString(),
-                cumulativeGasUsed: receipt.cumulativeGasUsed.toString(),
-                // Adicione outras conversões necessárias aqui
-            };
+            // Convertendo todos os valores BigInt para string
+            const receiptWithStrings = JSON.parse(JSON.stringify(receipt, (key, value) =>
+                typeof value === 'bigint' ? value.toString() : value
+            ));
 
             res.status(200).json({ success: true, receipt: receiptWithStrings });
         } catch (error) {
@@ -336,7 +337,6 @@ app.post('/close-proposal', async (req, res) => {
 
     console.log(`Resposta da proposta: ${response_proposal}`);
 });
-
 
 app.post('/accept-proposal', async (req, res) => {
     const { walletAddress } = req.body;
@@ -406,14 +406,19 @@ app.post('/make-payments', async (req, res) => {
                 gas: gasSendDoc,
                 gasPrice: gasPriceSendDoc,
                 nonce: nonceSendDoc,
-                chainId: 11155111
+                chainId: 11155111 // ID da rede Sepolia
             },
             privateKeyClinic
         );
 
         const receiptSendDoc = await web3.eth.sendSignedTransaction(signedTxSendDoc.rawTransaction);
         console.log('Transação de envio de documento bem-sucedida', receiptSendDoc);
+    } catch (error) {
+        console.error('Erro ao enviar documento:', error);
+        return res.status(500).send('Erro ao enviar documento');
+    }
 
+    try {
         // Agora, chamar makePayments
         const txMakePayments = contract.methods.makePayments();
         const gasMakePayments = await txMakePayments.estimateGas({ from: clinicAddress });
@@ -428,7 +433,7 @@ app.post('/make-payments', async (req, res) => {
                 gas: gasMakePayments,
                 gasPrice: gasPriceMakePayments,
                 nonce: nonceMakePayments,
-                chainId: 11155111
+                chainId: 11155111 // ID da rede Sepolia
             },
             privateKeyClinic
         );
@@ -453,51 +458,8 @@ app.post('/make-payments', async (req, res) => {
         });
 
         res.redirect('/clinicas');
-
     } catch (error) {
         console.error('Erro ao processar pagamentos:', error);
         res.status(500).send('Erro ao processar pagamentos');
     }
 });
-
-
-
-app.post('deposit-funds', async (req, res) => {
-    const { preco, quantidade } = req.body;
-
-    const precoFloat = parseFloat(preco);
-    const quantidadeInt = parseInt(quantidade, 10);
-
-    const valueInEther = precoFloat * quantidadeInt;
-
-    const tx = contract.methods.depositFunds(contractAddress,valueInEther);
-
-        try {
-            // Estimar o gás necessário para a transação
-            const gas = await tx.estimateGas({ from: labAddress });
-            const gasPrice = await web3.eth.getGasPrice();
-            const data = tx.encodeABI();
-            const nonce = await web3.eth.getTransactionCount(labAddress);
-
-            // Assinar a transação
-            const signedTx = await web3.eth.accounts.signTransaction(
-                {
-                    to: contractAddress,
-                    data,
-                    gas,
-                    gasPrice,
-                    nonce,
-                    chainId: 11155111 // ID da rede Sepolia
-                },
-                privateKey
-            );
-
-            // Enviar a transação assinada
-            const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-            console.log('Transação bem-sucedida', receipt);
-            res.status(200).json({ success: true, receipt });
-        } catch (error) {
-            console.error('Erro ao interagir com o contrato:', error);
-            res.status(500).json({ success: false, error: error.message });
-        }
-}) 
