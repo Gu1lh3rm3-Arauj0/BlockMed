@@ -440,7 +440,7 @@ app.post('/make-payments', async (req, res) => {
                 from: emailSender,
                 to: 'laboratorioblockchain70@gmail.com',
                 subject: "Link para o drive com os exames dos pacientes",
-                text: `Você recebeu o link do drive com os exames dos pacientes que aceitaram a proposta! Agradecemos a confiança! Por favor acesse: ${docLinkInput}`
+                text: `Você recebeu o link do drive com os exames dos pacientes que aceitaram a proposta! Agradecemos a confiança! Por favor acesse: ${docLinkInput}. Para acessar o pdf, utilize o endereço da sua carteira Metamask`
             };
     
             transporter.sendMail(mailOptions, (error, info) => {
