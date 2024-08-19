@@ -188,14 +188,12 @@ app.post('/edit-patient', (req, res) => {
 });
 
 app.post('/submit-exam', async (req, res) => {
+    const proposalId = proposals.length + 1;
+
     const { nome_lab, quantidade, preco, reason } = req.body;
     const quantidadeInt = parseInt(quantidade, 10);
 
-    // Converta o valor total para Wei
-    const valueInEther = preco * quantidadeInt;
-    const valueInWei = web3.utils.toWei(valueInEther.toString(), 'ether');
-
-    const proposalId = proposals.length + 1;
+    const value = preco * quantidadeInt;
 
     proposals.push({
         id: proposalId,
@@ -206,21 +204,19 @@ app.post('/submit-exam', async (req, res) => {
         patients: []  // Inicialmente, sem pacientes associados
     });
 
-    console.log('Proposta adicionada à lista de propostas:', proposals);
+    const amountInEther = value;
+
+    const amountInWei = web3.utils.toWei(amountInEther.toString(), 'ether');
 
     try {
         // Enviar a transação para depositar fundos
         console.log('Enviando transação para depósito de fundos...');
         const depositTx = contract.methods.depositFunds();
 
-        const gasDeposit = await depositTx.estimateGas({ from: labAddress, value: valueInWei });
+        const gasDeposit = await depositTx.estimateGas({ from: labAddress, value: amountInWei });
         const gasPriceDeposit = await web3.eth.getGasPrice();
         const dataDeposit = depositTx.encodeABI();
         const nonceDeposit = await web3.eth.getTransactionCount(labAddress);
-
-        console.log(`Gas necessário para depósito: ${gasDeposit}`);
-        console.log(`Preço do gas para depósito: ${gasPriceDeposit}`);
-        console.log(`Nonce para depósito: ${nonceDeposit}`);
 
         const signedTxDeposit = await web3.eth.accounts.signTransaction(
             {
@@ -230,51 +226,59 @@ app.post('/submit-exam', async (req, res) => {
                 gasPrice: gasPriceDeposit,
                 nonce: nonceDeposit,
                 chainId: 11155111, // ID da rede Sepolia
-                value: valueInWei
+                value: amountInWei
             },
             privateKey
         );
 
         const receiptDeposit = await web3.eth.sendSignedTransaction(signedTxDeposit.rawTransaction);
         console.log('Depósito realizado com sucesso', receiptDeposit);
+    } catch (error) {
+        console.error('Erro ao enviar fundos para o contrato:', error);
+    }
 
-        // Enviar a proposta
-        console.log('Enviando proposta...');
-        const proposalTx = contract.methods.sendProposal(quantidadeInt, preco, reason);
+    try {
+        const quantity = quantidade;
+        let  pricePerTest =  value//"500000000000000000";
+        const reason_test = reason;
 
-        const gasProposal = await proposalTx.estimateGas({ from: labAddress });
-        const gasPriceProposal = await web3.eth.getGasPrice();
-        const dataProposal = proposalTx.encodeABI();
-        const nonceProposal = await web3.eth.getTransactionCount(labAddress);
+        pricePerTest = web3.utils.toWei(pricePerTest.toString(), 'ether');
 
-        console.log(`Gas necessário para proposta: ${gasProposal}`);
-        console.log(`Preço do gas para proposta: ${gasPriceProposal}`);
-        console.log(`Nonce para proposta: ${nonceProposal}`);
-
-        const signedTxProposal = await web3.eth.accounts.signTransaction(
+        console.log(pricePerTest);
+    
+        const tx = contract.methods.sendProposal(quantity, pricePerTest, reason_test);
+            
+        const gas = await tx.estimateGas({ from: labAddress });
+        const gasPrice = await web3.eth.getGasPrice();
+        const data = tx.encodeABI();
+        const nonce = await web3.eth.getTransactionCount(labAddress);
+    
+        const signedTx = await web3.eth.accounts.signTransaction(
             {
-                to: contractAddress,
-                data: dataProposal,
-                gas: gasProposal,
-                gasPrice: gasPriceProposal,
-                nonce: nonceProposal,
-                chainId: 11155111 // ID da rede Sepolia
-            },
-            privateKey
+            to: contractAddress,
+            data,
+            gas,
+            gasPrice,
+            nonce,
+            chainId: 11155111 // ID da rede Sepolia
+        },
+        privateKey
         );
+    
+        const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        console.log('Transação bem-sucedida', receipt);
+    } catch (error) {
+        console.error('Erro ao interagir com o contrato:', error);
+    }
 
-        const receiptProposal = await web3.eth.sendSignedTransaction(signedTxProposal.rawTransaction);
-        console.log('Proposta enviada com sucesso', receiptProposal);
+    const mailOptions = {
+        from: emailSender,
+        to: 'laboratorioblockchain70@gmail.com',
+        subject: `${nome_lab}. Sua proposta foi enviada!`,
+        text: `Proposta: ${quantidade} exames de ${reason} por ${preco} ether.`
+    };
 
-        // Enviar email para o laboratório
-        console.log('Enviando email para o laboratório...');
-        const mailOptions = {
-            from: emailSender,
-            to: 'laboratorioblockchain70@gmail.com',
-            subject: `${nome_lab}. Sua proposta foi enviada!`,
-            text: `Proposta: ${quantidade} exames de ${reason} por ${preco} ether.`
-        };
-
+    try{
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
                 console.error('Erro no envio de email:', error);
@@ -287,11 +291,12 @@ app.post('/submit-exam', async (req, res) => {
         res.status(200).json({ success: true, message: 'Proposta enviada com sucesso!' });
 
     } catch (error) {
-        console.error('Erro ao interagir com o contrato:', error);
+        console.error('Erro ao enviar o e-mail:', error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
+// encerrar proposta
 // encerrar proposta
 app.post('/close-proposal', async (req, res) => {
     const { response_proposal } = req.body;
@@ -305,7 +310,7 @@ app.post('/close-proposal', async (req, res) => {
             const gasPrice = await web3.eth.getGasPrice();
             const data = tx.encodeABI();
             const nonce = await web3.eth.getTransactionCount(labAddress);
-
+    
             const signedTx = await web3.eth.accounts.signTransaction(
                 {
                     to: contractAddress,
@@ -313,29 +318,17 @@ app.post('/close-proposal', async (req, res) => {
                     gas,
                     gasPrice,
                     nonce,
-                    chainId: 11155111
+                    chainId: 11155111 // ID da rede Sepolia
                 },
                 privateKey
             );
-
+    
             const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
             console.log('Transação bem-sucedida', receipt);
-
-            // Convertendo todos os valores BigInt para string
-            const receiptWithStrings = JSON.parse(JSON.stringify(receipt, (key, value) =>
-                typeof value === 'bigint' ? value.toString() : value
-            ));
-
-            res.status(200).json({ success: true, receipt: receiptWithStrings });
         } catch (error) {
             console.error('Erro ao interagir com o contrato:', error);
-            res.status(500).json({ success: false, error: error.message });
         }
-    } else {
-        res.status(400).json({ success: false, message: 'Resposta da proposta inválida' });
     }
-
-    console.log(`Resposta da proposta: ${response_proposal}`);
 });
 
 app.post('/accept-proposal', async (req, res) => {
@@ -391,75 +384,80 @@ app.post('/accept-proposal', async (req, res) => {
 app.post('/make-payments', async (req, res) => {
     const { docLinkInput } = req.body;
 
-    try {
-        // Enviar o link do documento para o contrato
-        const txSendDoc = contract.methods.sendDoc(docLinkInput);
-        const gasSendDoc = await txSendDoc.estimateGas({ from: clinicAddress });
-        const gasPriceSendDoc = await web3.eth.getGasPrice();
-        const dataSendDoc = txSendDoc.encodeABI();
-        const nonceSendDoc = await web3.eth.getTransactionCount(clinicAddress);
+    const tx1 = contract.methods.sendDoc("docLinkInput");
 
-        const signedTxSendDoc = await web3.eth.accounts.signTransaction(
+    try {
+        const gas = await tx1.estimateGas({ from: clinicAddress });
+        const gasPrice = await web3.eth.getGasPrice();
+        const data = tx1.encodeABI();
+        const nonce = await web3.eth.getTransactionCount(clinicAddress);
+
+        const signedTx = await web3.eth.accounts.signTransaction(
             {
                 to: contractAddress,
-                data: dataSendDoc,
-                gas: gasSendDoc,
-                gasPrice: gasPriceSendDoc,
-                nonce: nonceSendDoc,
+                data,
+                gas,
+                gasPrice,
+                nonce,
                 chainId: 11155111 // ID da rede Sepolia
             },
             privateKeyClinic
         );
 
-        const receiptSendDoc = await web3.eth.sendSignedTransaction(signedTxSendDoc.rawTransaction);
-        console.log('Transação de envio de documento bem-sucedida', receiptSendDoc);
+        const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        console.log('Transação bem-sucedida', receipt);
     } catch (error) {
-        console.error('Erro ao enviar documento:', error);
-        return res.status(500).send('Erro ao enviar documento');
+        console.error('Erro ao interagir com o contrato:', error);
     }
 
-    try {
-        // Agora, chamar makePayments
-        const txMakePayments = contract.methods.makePayments();
-        const gasMakePayments = await txMakePayments.estimateGas({ from: clinicAddress });
-        const gasPriceMakePayments = await web3.eth.getGasPrice();
-        const dataMakePayments = txMakePayments.encodeABI();
-        const nonceMakePayments = await web3.eth.getTransactionCount(clinicAddress);
+    const tx2 = contract.methods.makePayments();
 
-        const signedTxMakePayments = await web3.eth.accounts.signTransaction(
+    try {
+        const gas = await tx2.estimateGas({ from: clinicAddress });
+        const gasPrice = await web3.eth.getGasPrice();
+        const data = tx2.encodeABI();
+        const nonce = await web3.eth.getTransactionCount(clinicAddress);
+
+        const signedTx = await web3.eth.accounts.signTransaction(
             {
                 to: contractAddress,
-                data: dataMakePayments,
-                gas: gasMakePayments,
-                gasPrice: gasPriceMakePayments,
-                nonce: nonceMakePayments,
+                data,
+                gas,
+                gasPrice,
+                nonce,
                 chainId: 11155111 // ID da rede Sepolia
             },
             privateKeyClinic
         );
 
-        const receiptMakePayments = await web3.eth.sendSignedTransaction(signedTxMakePayments.rawTransaction);
-        console.log('Transação de pagamento bem-sucedida', receiptMakePayments);
+        const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        console.log('Transação bem-sucedida', receipt);
 
-        // Enviar email para o laboratório
-        const mailOptions = {
-            from: emailSender,
-            to: 'laboratorioblockchain70@gmail.com',
-            subject: "Link para o drive com os exames dos pacientes",
-            text: `Você recebeu o link do drive com os exames dos pacientes que aceitaram a proposta! Agradecemos a confiança! Por favor acesse: ${docLinkInput}`
-        };
+        try {
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.error('Erro no envio de email:', error);
-            } else {
-                console.log('Email enviado: ' + info.response);
-            }
-        });
-
-        res.redirect('/clinicas');
+            // Enviar email para o laboratório
+            const mailOptions = {
+                from: emailSender,
+                to: 'laboratorioblockchain70@gmail.com',
+                subject: "Link para o drive com os exames dos pacientes",
+                text: `Você recebeu o link do drive com os exames dos pacientes que aceitaram a proposta! Agradecemos a confiança! Por favor acesse: ${docLinkInput}`
+            };
+    
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error('Erro no envio de email:', error);
+                } else {
+                    console.log('Email enviado: ' + info.response);
+                }
+            });
+    
+            res.redirect('/clinicas');
+        } catch (error) {
+            console.error('Erro a enviar e-mail:', error);
+            res.status(500).send('Erro a enviar e-mail');
+        }
     } catch (error) {
-        console.error('Erro ao processar pagamentos:', error);
-        res.status(500).send('Erro ao processar pagamentos');
+        console.error('Erro ao interagir com o contrato:', error);
     }
+
 });
