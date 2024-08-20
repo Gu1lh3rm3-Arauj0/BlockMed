@@ -10,19 +10,20 @@ A fim de compreender mais acerca da implementação do projeto, acesse nossa [ar
 
 O vídeo abaixo demonstra o funcionamento da plataforma. 
 
-`<Video a ser adicionado>`
+[Vídeo com a Demo](./docs/Video/Demo.mp4).
 
 ## Business Model Canvas 
 Para visualizar nosso Business Model Canvas (BMC), acesse o [link](BMC/BMC.png) 
 
 
-## Passo a passo para rodar o projeto 
-```npm install node  ```
+## Dependências do projeto
+* Node
+* Express web3
+* Nodemailer  -- Criar uma senha para apps na configuração do email do google
+* Dotenv
+* Ethers
+* Ganache-cli
 
-``` npm install express web3 ejs body-parser ```
+## Transações feitas na rede de testes
 
-``` npm install dotenv ``` 
-
-``` npm install nodemailer ``` -- Criar uma senha para apps na configuração do email do google
-
-``` npm install ganache-cli web3 ``` 
+[Rede Sepolia de testes](https://sepolia.etherscan.io/address/0x516b1175fef9298f21d73c08f32fb7753594dece)
