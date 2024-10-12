@@ -25,12 +25,12 @@ A estrutura do projeto é baseada na tecnologia blockchain, que, por meio de Con
 A fim de compreender mais acerca da implementação do projeto, acesse nossa [arquitetura UML](./docs/Architecture/UML_architecture.png).
 
 ## Dependências do projeto
-* Node
-* Express web3
-* Nodemailer  -- Criar uma senha para apps na configuração do email do google
-* Dotenv
-* Ethers
-* Ganache-cli
+- Node
+- Express web3
+- Nodemailer  -- Criar uma senha para apps na configuração do email do google
+- Dotenv
+- Ethers
+- Ganache-cli
 
 ## Business Model Canvas 
 Para visualizar nosso Business Model Canvas (BMC), acesse o [link](BMC/BMC.png) 
@@ -38,7 +38,15 @@ Para visualizar nosso Business Model Canvas (BMC), acesse o [link](BMC/BMC.png)
 ## Demonstração
 O vídeo abaixo demonstra o funcionamento da plataforma. 
 
-[Vídeo com a Demo]([https://youtu.be/8ZUltkozZgM?feature=shared]).
+[Vídeo com a Demo](https://youtu.be/8ZUltkozZgM?feature=shared).
 
 ## Transações feitas na rede de testes
 [Rede Sepolia de testes](https://sepolia.etherscan.io/address/0x516b1175fef9298f21d73c08f32fb7753594dece)
+
+## Contato
+- Ana Clara Coelho
+- Guilherme Souza
+- Nicolas Freitas
+
+## Licença
+Este projeto é licenciado sob a Licença MIT.
