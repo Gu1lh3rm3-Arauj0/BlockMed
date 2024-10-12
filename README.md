@@ -1,8 +1,6 @@
 # BlockMed
 
-![Alt text](./img/logo.png)
-
-**Blockmed** BlockMed é uma plataforma desenvolvida para gerenciar a venda de exames de sangue de forma segura e transparente utilizando a plataforma Ethereum através de Contratos Inteligentes. Este projeto foi criado para garantir a privacidade dos pacientes e a autenticidade das transações médicas.
+A **Blockmed** é uma plataforma desenvolvida para gerenciar a venda de exames de sangue de forma segura e transparente utilizando a plataforma Ethereum através de Contratos Inteligentes. Este projeto foi criado para garantir a privacidade dos pacientes e a autenticidade das transações médicas.
 
 O BlockMed permite que laboratórios registrem exames de sangue e vendam os resultados de forma segura. O sistema utiliza Ethereum para garantir a imutabilidade e a rastreabilidade dos registros, proporcionando uma camada adicional de segurança e confiança.
 
